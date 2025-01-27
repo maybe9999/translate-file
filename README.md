@@ -8,4 +8,4 @@
 
 2) ```pip install -r requirements.txt```
 
-3) ```spython translated.py```
+3) ```python translated.py```
