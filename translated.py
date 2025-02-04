@@ -7,7 +7,11 @@ Encoding: UTF-8
 # Set InputEncoding and OutputEncoding to UTF8
 # https://learn.microsoft.com/en-us/answers/questions/213769/what-are-the-differences-between-chcp-65001-and-(c
 
-import datetime, easygui
+import datetime, re
+try:
+    import easygui
+except:
+    pass
 from os import makedirs
 from random import randint
 from googletrans import Translator #pip install googletrans==4.0.0rc1
@@ -81,12 +85,15 @@ def recharge_construct(): #Translator construct
 
 
 def translate_simple_text(text):
-	try:
-		tradd = translator.translate(text, dest=output_lang, src=input_lang).text or text   #googletrans
-		return tradd
-	except Exception as err:
-		print("error en traducion",err)
-		return text
+    if not text:
+        print("Texto vacío o None detectado en la traducción")
+        return ""
+    try:
+        tradd = translator.translate(text, dest=output_lang, src=input_lang).text or text   #googletrans
+        return tradd
+    except Exception as err:
+        print("error en traducion",err)
+        return text
 
 def get_paths():
 	eleccion = easygui.buttonbox("¿Qué deseas seleccionar?",  
@@ -104,7 +111,8 @@ def get_paths():
 	else:
 		return [archivo.as_posix() for archivo in Path(".").rglob("*.txt")]
 	
-
+def get_paths_android():
+    return [archivo.as_posix() for archivo in Path(".").rglob("*.txt")]
 
 def read_content(file):
 	with open(file, "r",encoding="utf-8") as arch:
@@ -119,13 +127,16 @@ def save_content(path, content):
 
 
 def dividir_texto(texto, longitud_maxima=4000):
+    if not texto:
+        return [""]
+    
     # Lista para almacenar los segmentos
     segmentos = []
     
     # Mientras queden partes de texto para procesar
     while len(texto) > longitud_maxima:
         # Buscar el último espacio dentro de la longitud máxima
-        punto_corte = texto.rfind(' ', 0, longitud_maxima)
+        punto_corte = texto.rfind('.', 0, longitud_maxima)
         
         if punto_corte == -1:  # Si no hay espacio, cortamos en longitud_maxima
             punto_corte = longitud_maxima
@@ -136,7 +147,7 @@ def dividir_texto(texto, longitud_maxima=4000):
 
     # Añadir el resto del texto (el último segmento)
     if texto:
-        segmentos.append(texto)
+        segmentos.append(texto.strip())
 
     return segmentos
 
@@ -144,11 +155,13 @@ def get_save_and_open_path(path: str) -> tuple[Path, Path]:
 	full_file_path = Path(path)
 	directory_path = full_file_path.parent
 	file_name  = full_file_path.name
-	print("Path: "+ full_file_path)
+	print("Path:", full_file_path)
 
 	return ( full_file_path, directory_path / "translated" / file_name )
-
-files_paths = get_paths()
+try:
+    files_paths = get_paths()
+except:
+    files_paths = get_paths_android()
 print(files_paths)
 
 for file_path in files_paths:
@@ -162,11 +175,27 @@ for file_path in files_paths:
 	
 	content_origin = str(read_content(open_file_path))
 	content_origin = content_origin.replace("© Copyright NovelFull.Com. All Rights Reserved.", "")
+	print("Dividiendo texto...")
+	content_origin = re.sub(r'\n{2,5}', '\n', content_origin)
+	content_origin = content_origin.replace("\t", " ")  # Reemplaza por un espacio
+	content_origin = re.sub(r' {2,}', ' ', content_origin)
 	partes = dividir_texto(content_origin)
+	
+	for index, text in enumerate(partes):
+	    if text is None:
+	       print(f"Error: parte {index} es None")
+	    elif text == "":
+	        print(f"Error: parte {index} está vacía")
 
-	for index in range(len(partes)):		
+	for index in range(len(partes)):
+		if index % 50 == 0:
+		    recharge_construct()
+		
+		if index > 81 and 89 > index and False:
+		    print("part", repr(partes[index]))
+		    input("...")
 		text = partes[index]
-		print(index," \\ ",len(text))
-		translate_content = translate_simple_text(str(text))
+		print(index," \\ ",len(partes), "  -  ", len(text) )
+		translate_content = translate_simple_text(f"{str(text)}")
 		save_content(save_file_path, translate_content)
 	
