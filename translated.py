@@ -158,11 +158,12 @@ def get_save_and_open_path(path: str) -> tuple[Path, Path]:
 	print("Path:", full_file_path)
 
 	return ( full_file_path, directory_path / "translated" / file_name )
+
+
 try:
-    files_paths = get_paths()
+    files_paths = get_paths() #PC
 except:
-    files_paths = get_paths_android()
-print(files_paths)
+    files_paths = get_paths_android() #Android
 
 for file_path in files_paths:
 	if file_path == None and len(files_paths) <= 1: 
@@ -175,25 +176,14 @@ for file_path in files_paths:
 	
 	content_origin = str(read_content(open_file_path))
 	content_origin = content_origin.replace("© Copyright NovelFull.Com. All Rights Reserved.", "")
-	print("Dividiendo texto...")
-	content_origin = re.sub(r'\n{2,5}', '\n', content_origin)
-	content_origin = content_origin.replace("\t", " ")  # Reemplaza por un espacio
+	content_origin = content_origin.replace("\t", " ")  # Elimina tabulaciones
 	content_origin = re.sub(r' {2,}', ' ', content_origin)
+
 	partes = dividir_texto(content_origin)
 	
-	for index, text in enumerate(partes):
-	    if text is None:
-	       print(f"Error: parte {index} es None")
-	    elif text == "":
-	        print(f"Error: parte {index} está vacía")
-
 	for index in range(len(partes)):
-		if index % 50 == 0:
-		    recharge_construct()
-		
-		if index > 81 and 89 > index and False:
-		    print("part", repr(partes[index]))
-		    input("...")
+		if index % 50 == 0: recharge_construct()
+
 		text = partes[index]
 		print(index," \\ ",len(partes), "  -  ", len(text) )
 		translate_content = translate_simple_text(f"{str(text)}")
